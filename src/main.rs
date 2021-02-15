@@ -7,6 +7,8 @@ mod map;
 pub use map::*;
 mod player;
 pub use player::*;
+mod systems;
+pub use systems::{visibility_system::*};
 
 fn main() -> BError {
     let context = BTermBuilder::simple80x50()
@@ -17,10 +19,11 @@ fn main() -> BError {
     game_state.ecs.register::<Position>();
     game_state.ecs.register::<Renderable>();
     game_state.ecs.register::<Player>();
+    game_state.ecs.register::<Viewshed>();
 
-    let (rooms, map) = new_map_rooms_and_corridors();
+    let map = Map::new_map_rooms_and_corridors();
+    let player_pos = map.rooms[0].center();
     game_state.ecs.insert(map);
-    let player_pos = rooms[0].center();
 
     game_state
         .ecs
@@ -32,6 +35,7 @@ fn main() -> BError {
             bg: RGB::named(BLACK),
         })
         .with(Player {})
+        .with(Viewshed { visible_tiles: Vec::new(), range: 8, dirty: true })
         .build();
 
     main_loop(context, game_state)
@@ -48,8 +52,7 @@ impl GameState for State {
         player_input(self, ctx);
         self.run_systems();
 
-        let map = self.ecs.fetch::<Vec<TileType>>();
-        draw_map(&map, ctx);
+        draw_map(&self.ecs, ctx);
 
         let positions = self.ecs.read_storage::<Position>();
         let renderables = self.ecs.read_storage::<Renderable>();
@@ -61,8 +64,9 @@ impl GameState for State {
 
 impl State {
     fn run_systems(&mut self) {
-        // let mut lw = LeftWalker{};
-        // lw.run_now(&self.ecs);
+        let mut vis = VisibilitySystem{};
+        vis.run_now(&self.ecs);
+
         self.ecs.maintain();
     }
 }
