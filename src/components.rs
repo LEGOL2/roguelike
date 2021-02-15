@@ -1,6 +1,6 @@
+use bracket_lib::prelude::{FontCharType, Point, RGB};
 use specs::prelude::*;
 use specs_derive::*;
-use bracket_lib::prelude::{FontCharType, RGB, Point};
 
 #[derive(Component)]
 pub struct Position {
@@ -23,4 +23,12 @@ pub struct Viewshed {
     pub visible_tiles: Vec<Point>,
     pub range: i32,
     pub dirty: bool,
+}
+
+#[derive(Component, Debug)]
+pub struct Monster {}
+
+#[derive(Component, Debug)]
+pub struct Name {
+    pub name: String,
 }
