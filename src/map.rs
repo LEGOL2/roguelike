@@ -15,6 +15,8 @@ pub struct Map {
     pub height: i32,
     pub revealed_tiles: Vec<bool>,
     pub visible_tiles: Vec<bool>,
+    pub blocked: Vec<bool>,
+    pub tile_content: Vec<Vec<Entity>>,
 }
 
 impl Map {
@@ -57,6 +59,8 @@ impl Map {
             height: 50,
             revealed_tiles: vec![false; 80 * 50],
             visible_tiles: vec![false; 80 * 50],
+            blocked: vec![false; 80*50],
+            tile_content: vec![Vec::new(); 80*50],
         };
 
         const MAX_ROOMS: i32 = 30;
@@ -98,6 +102,26 @@ impl Map {
 
         map
     }
+
+    fn is_exit_valid(&self, x: i32, y: i32) -> bool {
+        if x < 1 || x > self.width - 1 || y < 1 || y > self.height - 1 {
+            return false;
+        }
+        let idx = self.xy_idx(x, y);
+        !self.blocked[idx]
+    }
+
+    pub fn populate_blocked(&mut self) {
+        for (i, tile) in self.tiles.iter_mut().enumerate() {
+            self.blocked[i] = *tile == TileType::Wall;
+        }
+    }
+
+    pub fn clear_content_index(&mut self) {
+        for content in self.tile_content.iter_mut() {
+            content.clear();
+        }
+    }
 }
 
 impl Algorithm2D for Map {
@@ -109,6 +133,40 @@ impl Algorithm2D for Map {
 impl BaseMap for Map {
     fn is_opaque(&self, _idx: usize) -> bool {
         self.tiles[_idx] == TileType::Wall
+    }
+
+    fn get_available_exits(&self, _idx: usize) -> SmallVec<[(usize, f32); 10]> {
+        let mut exits = SmallVec::new();
+        let x = _idx as i32 % self.width;
+        let y = _idx as i32 / self.width;
+        let w = self.width as usize;
+
+        if self.is_exit_valid(x - 1, y) {
+            exits.push((_idx - 1, 1.0))
+        };
+        if self.is_exit_valid(x + 1, y) {
+            exits.push((_idx + 1, 1.0))
+        };
+        if self.is_exit_valid(x, y - 1) {
+            exits.push((_idx - w, 1.0))
+        };
+        if self.is_exit_valid(x, y + 1) {
+            exits.push((_idx + w, 1.0))
+        };
+
+        if self.is_exit_valid(x-1, y-1) { exits.push(((_idx-w)-1, 1.45)); }
+        if self.is_exit_valid(x+1, y-1) { exits.push(((_idx-w)+1, 1.45)); }
+        if self.is_exit_valid(x-1, y+1) { exits.push(((_idx+w)-1, 1.45)); }
+        if self.is_exit_valid(x+1, y+1) { exits.push(((_idx+w)+1, 1.45)); }
+
+        exits
+    }
+
+    fn get_pathing_distance(&self, _idx1: usize, _idx2: usize) -> f32 {
+        let w = self.width as usize;
+        let p1 = Point::new(_idx1 % w, _idx1 / w);
+        let p2 = Point::new(_idx2 % w, _idx2 / w);
+        DistanceAlg::Pythagoras.distance2d(p1, p2)
     }
 }
 

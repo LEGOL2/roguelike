@@ -8,7 +8,7 @@ pub use map::*;
 mod player;
 pub use player::*;
 mod systems;
-pub use systems::{monster_ai_system::*, visibility_system::*};
+pub use systems::{monster_ai_system::*, visibility_system::*, map_indexing_system::*, damage_system::*, melee_combat_system::*};
 
 fn main() -> BError {
     let context = BTermBuilder::simple80x50()
@@ -17,7 +17,6 @@ fn main() -> BError {
 
     let mut game_state = State {
         ecs: World::new(),
-        runstate: RunState::Running,
     };
     game_state.ecs.register::<Position>();
     game_state.ecs.register::<Renderable>();
@@ -25,12 +24,15 @@ fn main() -> BError {
     game_state.ecs.register::<Viewshed>();
     game_state.ecs.register::<Monster>();
     game_state.ecs.register::<Name>();
+    game_state.ecs.register::<BlocksTile>();
+    game_state.ecs.register::<CombatStats>();
+    game_state.ecs.register::<SufferDamage>();
+    game_state.ecs.register::<WantsToMelee>();
 
     let map = Map::new_map_rooms_and_corridors();
     let player_pos = map.rooms[0].center();
 
-    game_state
-        .ecs
+    let player_entity = game_state.ecs
         .create_entity()
         .with(Position {
             x: player_pos.x,
@@ -49,6 +51,12 @@ fn main() -> BError {
         })
         .with(Name {
             name: "Player".to_string(),
+        })
+        .with(CombatStats {
+            max_hp: 30,
+            hp: 30,
+            defense: 2,
+            power: 5,
         })
         .build();
 
@@ -87,33 +95,56 @@ fn main() -> BError {
             .with(Name {
                 name: format!("{} #{}", &name, i),
             })
+            .with(BlocksTile {})
+            .with(CombatStats{ max_hp: 16, hp: 16, defense: 1, power: 4 })
             .build();
     }
 
     game_state.ecs.insert(map);
-    game_state
-        .ecs
-        .insert(Point::new(player_pos.x, player_pos.y));
+    game_state.ecs.insert(Point::new(player_pos.x, player_pos.y));
+    game_state.ecs.insert(player_entity);
+    game_state.ecs.insert(RunState::PreRun);
 
     main_loop(context, game_state)
 }
 
 pub struct State {
     pub ecs: World,
-    pub runstate: RunState,
 }
 
 impl GameState for State {
     fn tick(&mut self, ctx: &mut BTerm) {
         ctx.cls();
+        let mut new_run_state;
+        {
+            let run_state = self.ecs.fetch::<RunState>();
+            new_run_state = *run_state;
+        }
 
-        match self.runstate {
-            RunState::Paused => self.runstate = player_input(self, ctx),
-            RunState::Running => {
+        match new_run_state {
+            RunState::PreRun => {
                 self.run_systems();
-                self.runstate = RunState::Paused;
+                new_run_state = RunState::AwaitingInput;
+            }
+            RunState::AwaitingInput => {
+                new_run_state = player_input(self, ctx);
+            }
+            RunState::PlayerTurn => {
+                self.run_systems();
+                new_run_state = RunState::MonsterTurn;
+            }
+            RunState::MonsterTurn => {
+                self.run_systems();
+                new_run_state = RunState::AwaitingInput;
             }
         }
+
+        {
+            let mut runwriter = self.ecs.write_resource::<RunState>();
+            *runwriter = new_run_state;
+        }
+
+        delete_the_dead(&mut self.ecs);
 
         draw_map(&self.ecs, ctx);
 
@@ -136,6 +167,12 @@ impl State {
         vis.run_now(&self.ecs);
         let mut mob = MonsterAI {};
         mob.run_now(&self.ecs);
+        let mut map_index = MapIndexingSystem {};
+        map_index.run_now(&self.ecs);
+        let mut melee = MeleeCombatSystem {};
+        melee.run_now(&self.ecs);
+        let mut damage = DamageSystem {};
+        damage.run_now(&self.ecs);
 
         self.ecs.maintain();
     }
@@ -143,6 +180,8 @@ impl State {
 
 #[derive(PartialEq, Clone, Copy)]
 pub enum RunState {
-    Paused,
-    Running,
+    AwaitingInput,
+    PreRun,
+    PlayerTurn,
+    MonsterTurn
 }

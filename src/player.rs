@@ -1,6 +1,6 @@
-use crate::RunState;
+use crate::{CombatStats, RunState, WantsToMelee};
 
-use super::{Map, Player, Position, State, TileType, Viewshed};
+use super::{Map, Player, Position, State, Viewshed};
 use bracket_lib::prelude::{BTerm, Point, VirtualKeyCode};
 use specs::prelude::*;
 use std::cmp::{max, min};
@@ -10,10 +10,23 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
     let players = ecs.read_storage::<Player>();
     let mut viewsheds = ecs.write_storage::<Viewshed>();
     let map = ecs.fetch::<Map>();
+    let combat_stats = ecs.read_storage::<CombatStats>();
+    let entities = ecs.entities();
+    let mut wants_to_melee = ecs.write_storage::<WantsToMelee>();
 
-    for (pos, _, viewshed) in (&mut positions, &players, &mut viewsheds).join() {
+    for (pos, _, viewshed, entity) in (&mut positions, &players, &mut viewsheds, &entities).join() {
+        if pos.x + delta_x < 1 || pos.x + delta_x > map.width-1 || pos.y + delta_y < 1 || pos.y + delta_y > map.height-1 { return; }
         let destination_idx = map.xy_idx(pos.x + delta_x, pos.y + delta_y);
-        if map.tiles[destination_idx] != TileType::Wall {
+
+        for potential_target in map.tile_content[destination_idx].iter() {
+            let target = combat_stats.get(*potential_target);
+            if let Some(_target) = target {
+                wants_to_melee.insert(entity, WantsToMelee { target: *potential_target }).expect("Failed to add a target.");
+                return;
+            }
+        }
+
+        if !map.blocked[destination_idx] {
             pos.x = min(79, max(0, pos.x + delta_x));
             pos.y = min(49, max(0, pos.y + delta_y));
             viewshed.dirty = true;
@@ -26,7 +39,7 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
 
 pub fn player_input(game_state: &mut State, ctx: &mut BTerm) -> RunState {
     match ctx.key {
-        None => return RunState::Paused,
+        None => return RunState::AwaitingInput,
         Some(key) => match key {
             VirtualKeyCode::Left | VirtualKeyCode::Numpad4 => {
                 try_move_player(-1, 0, &mut game_state.ecs)
@@ -52,9 +65,9 @@ pub fn player_input(game_state: &mut State, ctx: &mut BTerm) -> RunState {
 
             VirtualKeyCode::Numpad1 => try_move_player(-1, 1, &mut game_state.ecs),
 
-            _ => return RunState::Paused,
+            _ => return RunState::AwaitingInput,
         },
     }
 
-    RunState::Running
+    RunState::PlayerTurn
 }
