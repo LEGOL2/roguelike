@@ -1,12 +1,12 @@
+use super::{console, CombatStats, Player, SufferDamage};
 use specs::prelude::*;
-use super::{CombatStats, SufferDamage, console, Player};
 
 pub struct DamageSystem {}
 
-impl <'a> System<'a> for DamageSystem {
+impl<'a> System<'a> for DamageSystem {
     type SystemData = (
         WriteStorage<'a, CombatStats>,
-        WriteStorage<'a, SufferDamage>
+        WriteStorage<'a, SufferDamage>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
@@ -27,17 +27,18 @@ pub fn delete_the_dead(ecs: &mut World) {
         let players = ecs.read_storage::<Player>();
         let entites = ecs.entities();
         for (entity, stats) in (&entites, &combat_stats).join() {
-            if stats.hp < 1 { 
+            if stats.hp < 1 {
                 let player = players.get(entity);
                 match player {
                     Some(_) => console::log("You are dead!"),
-                    None => dead.push(entity)
+                    None => dead.push(entity),
                 }
             }
         }
     }
 
     for victim in dead {
-        ecs.delete_entity(victim).expect("Failed to delete dead entity.");
+        ecs.delete_entity(victim)
+            .expect("Failed to delete dead entity.");
     }
 }

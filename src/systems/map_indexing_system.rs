@@ -1,5 +1,5 @@
+use super::{BlocksTile, Map, Position};
 use specs::prelude::*;
-use super::{Map, Position, BlocksTile};
 
 pub struct MapIndexingSystem {}
 
@@ -8,12 +8,12 @@ impl<'a> System<'a> for MapIndexingSystem {
         WriteExpect<'a, Map>,
         ReadStorage<'a, Position>,
         ReadStorage<'a, BlocksTile>,
-        Entities<'a>
+        Entities<'a>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
         let (mut map, pos, blockers, entities) = data;
-        
+
         map.populate_blocked();
         map.clear_content_index();
         for (entity, pos) in (&entities, &pos).join() {

@@ -8,16 +8,17 @@ pub use map::*;
 mod player;
 pub use player::*;
 mod systems;
-pub use systems::{monster_ai_system::*, visibility_system::*, map_indexing_system::*, damage_system::*, melee_combat_system::*};
+pub use systems::{
+    damage_system::*, map_indexing_system::*, melee_combat_system::*, monster_ai_system::*,
+    visibility_system::*,
+};
 
 fn main() -> BError {
     let context = BTermBuilder::simple80x50()
         .with_title("Roguelike")
         .build()?;
 
-    let mut game_state = State {
-        ecs: World::new(),
-    };
+    let mut game_state = State { ecs: World::new() };
     game_state.ecs.register::<Position>();
     game_state.ecs.register::<Renderable>();
     game_state.ecs.register::<Player>();
@@ -32,7 +33,8 @@ fn main() -> BError {
     let map = Map::new_map_rooms_and_corridors();
     let player_pos = map.rooms[0].center();
 
-    let player_entity = game_state.ecs
+    let player_entity = game_state
+        .ecs
         .create_entity()
         .with(Position {
             x: player_pos.x,
@@ -96,12 +98,19 @@ fn main() -> BError {
                 name: format!("{} #{}", &name, i),
             })
             .with(BlocksTile {})
-            .with(CombatStats{ max_hp: 16, hp: 16, defense: 1, power: 4 })
+            .with(CombatStats {
+                max_hp: 16,
+                hp: 16,
+                defense: 1,
+                power: 4,
+            })
             .build();
     }
 
     game_state.ecs.insert(map);
-    game_state.ecs.insert(Point::new(player_pos.x, player_pos.y));
+    game_state
+        .ecs
+        .insert(Point::new(player_pos.x, player_pos.y));
     game_state.ecs.insert(player_entity);
     game_state.ecs.insert(RunState::PreRun);
 
@@ -183,5 +192,5 @@ pub enum RunState {
     AwaitingInput,
     PreRun,
     PlayerTurn,
-    MonsterTurn
+    MonsterTurn,
 }

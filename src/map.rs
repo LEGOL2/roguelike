@@ -59,8 +59,8 @@ impl Map {
             height: 50,
             revealed_tiles: vec![false; 80 * 50],
             visible_tiles: vec![false; 80 * 50],
-            blocked: vec![false; 80*50],
-            tile_content: vec![Vec::new(); 80*50],
+            blocked: vec![false; 80 * 50],
+            tile_content: vec![Vec::new(); 80 * 50],
         };
 
         const MAX_ROOMS: i32 = 30;
@@ -154,10 +154,18 @@ impl BaseMap for Map {
             exits.push((_idx + w, 1.0))
         };
 
-        if self.is_exit_valid(x-1, y-1) { exits.push(((_idx-w)-1, 1.45)); }
-        if self.is_exit_valid(x+1, y-1) { exits.push(((_idx-w)+1, 1.45)); }
-        if self.is_exit_valid(x-1, y+1) { exits.push(((_idx+w)-1, 1.45)); }
-        if self.is_exit_valid(x+1, y+1) { exits.push(((_idx+w)+1, 1.45)); }
+        if self.is_exit_valid(x - 1, y - 1) {
+            exits.push(((_idx - w) - 1, 1.45));
+        }
+        if self.is_exit_valid(x + 1, y - 1) {
+            exits.push(((_idx - w) + 1, 1.45));
+        }
+        if self.is_exit_valid(x - 1, y + 1) {
+            exits.push(((_idx + w) - 1, 1.45));
+        }
+        if self.is_exit_valid(x + 1, y + 1) {
+            exits.push(((_idx + w) + 1, 1.45));
+        }
 
         exits
     }
