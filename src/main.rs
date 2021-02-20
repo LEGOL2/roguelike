@@ -12,6 +12,8 @@ pub use systems::{
     damage_system::*, map_indexing_system::*, melee_combat_system::*, monster_ai_system::*,
     visibility_system::*,
 };
+mod gui;
+mod gamelog;
 
 fn main() -> BError {
     let context = BTermBuilder::simple80x50()
@@ -113,6 +115,7 @@ fn main() -> BError {
         .insert(Point::new(player_pos.x, player_pos.y));
     game_state.ecs.insert(player_entity);
     game_state.ecs.insert(RunState::PreRun);
+    game_state.ecs.insert(gamelog::GameLog {entries: vec!["Welcome to the Dungeon".to_string()]} );
 
     main_loop(context, game_state)
 }
@@ -167,6 +170,8 @@ impl GameState for State {
                 ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
             }
         }
+
+        gui::draw_ui(&self.ecs, ctx);
     }
 }
 
