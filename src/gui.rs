@@ -33,7 +33,7 @@ pub fn draw_ui(ecs: &World, ctx: &mut BTerm) {
 
     let mouse_pos = ctx.mouse_pos();
     ctx.set_bg(mouse_pos.0, mouse_pos.1, RGB::named(MAGENTA));
-    
+
     draw_tooltip(ecs, ctx);
 }
 
@@ -93,13 +93,7 @@ fn draw_tooltip(ecs: &World, ctx: &mut BTerm) {
             let left_x = mouse_pos.0 + 3;
             let mut y = mouse_pos.1;
             for s in tooltip.iter() {
-                ctx.print_color(
-                    left_x + 1,
-                    y,
-                    RGB::named(WHITE),
-                    RGB::named(GREY),
-                    s,
-                );
+                ctx.print_color(left_x + 1, y, RGB::named(WHITE), RGB::named(GREY), s);
                 let padding = (width - s.len() as i32) - 1;
                 for i in 0..padding {
                     ctx.print_color(

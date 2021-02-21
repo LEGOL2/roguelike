@@ -12,8 +12,9 @@ pub use systems::{
     damage_system::*, map_indexing_system::*, melee_combat_system::*, monster_ai_system::*,
     visibility_system::*,
 };
-mod gui;
 mod gamelog;
+mod gui;
+mod spawner;
 
 fn main() -> BError {
     let context = BTermBuilder::simple80x50()
@@ -35,78 +36,11 @@ fn main() -> BError {
     let map = Map::new_map_rooms_and_corridors();
     let player_pos = map.rooms[0].center();
 
-    let player_entity = game_state
-        .ecs
-        .create_entity()
-        .with(Position {
-            x: player_pos.x,
-            y: player_pos.y,
-        })
-        .with(Renderable {
-            glyph: to_cp437('@'),
-            fg: RGB::named(YELLOW),
-            bg: RGB::named(BLACK),
-        })
-        .with(Player {})
-        .with(Viewshed {
-            visible_tiles: Vec::new(),
-            range: 8,
-            dirty: true,
-        })
-        .with(Name {
-            name: "Player".to_string(),
-        })
-        .with(CombatStats {
-            max_hp: 30,
-            hp: 30,
-            defense: 2,
-            power: 5,
-        })
-        .build();
+    let player_entity = spawner::player(&mut game_state.ecs, player_pos.x, player_pos.y);
 
-    let mut rng = RandomNumberGenerator::new();
-    for (i, room) in map.rooms.iter().skip(1).enumerate() {
-        let Point { x, y } = room.center();
-        let glyph;
-        let name;
-        let roll = rng.roll_dice(1, 2);
-        match roll {
-            1 => {
-                glyph = to_cp437('g');
-                name = "Goblin".to_string();
-            }
-            _ => {
-                glyph = to_cp437('o');
-                name = "Orc".to_string();
-            }
-        }
-
-        game_state
-            .ecs
-            .create_entity()
-            .with(Position { x, y })
-            .with(Renderable {
-                glyph: glyph,
-                fg: RGB::named(RED),
-                bg: RGB::named(BLACK),
-            })
-            .with(Viewshed {
-                visible_tiles: Vec::new(),
-                range: 8,
-                dirty: true,
-            })
-            .with(Monster {})
-            .with(Name {
-                name: format!("{} #{}", &name, i),
-            })
-            .with(BlocksTile {})
-            .with(CombatStats {
-                max_hp: 16,
-                hp: 16,
-                defense: 1,
-                power: 4,
-            })
-            .build();
+    game_state.ecs.insert(RandomNumberGenerator::new());
+    for room in map.rooms.iter().skip(1) {
+        spawner::spawn_room(&mut game_state.ecs, room);
     }
 
     game_state.ecs.insert(map);
@@ -115,7 +49,9 @@ fn main() -> BError {
         .insert(Point::new(player_pos.x, player_pos.y));
     game_state.ecs.insert(player_entity);
     game_state.ecs.insert(RunState::PreRun);
-    game_state.ecs.insert(gamelog::GameLog {entries: vec!["Welcome to the Dungeon".to_string()]} );
+    game_state.ecs.insert(gamelog::GameLog {
+        entries: vec!["Welcome to the Dungeon".to_string()],
+    });
 
     main_loop(context, game_state)
 }
