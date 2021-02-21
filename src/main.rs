@@ -9,8 +9,8 @@ mod player;
 pub use player::*;
 mod systems;
 pub use systems::{
-    damage_system::*, map_indexing_system::*, melee_combat_system::*, monster_ai_system::*,
-    visibility_system::*,
+    damage_system::*, inventory_system::ItemCollectionSystem, map_indexing_system::*,
+    melee_combat_system::*, monster_ai_system::*, visibility_system::*,
 };
 mod gamelog;
 mod gui;
@@ -32,6 +32,10 @@ fn main() -> BError {
     game_state.ecs.register::<CombatStats>();
     game_state.ecs.register::<SufferDamage>();
     game_state.ecs.register::<WantsToMelee>();
+    game_state.ecs.register::<Item>();
+    game_state.ecs.register::<Potion>();
+    game_state.ecs.register::<InBackpack>();
+    game_state.ecs.register::<WantsToPickupItem>();
 
     let map = Map::new_map_rooms_and_corridors();
     let player_pos = map.rooms[0].center();
@@ -85,6 +89,11 @@ impl GameState for State {
                 self.run_systems();
                 new_run_state = RunState::AwaitingInput;
             }
+            RunState::ShowInventory => {
+                if gui::show_inventory(self, ctx) == gui::ItemMenuResult::Cancel {
+                    new_run_state = RunState::AwaitingInput;
+                }
+            }
         }
 
         {
@@ -123,6 +132,8 @@ impl State {
         melee.run_now(&self.ecs);
         let mut damage = DamageSystem {};
         damage.run_now(&self.ecs);
+        let mut pickup = ItemCollectionSystem {};
+        pickup.run_now(&self.ecs);
 
         self.ecs.maintain();
     }
@@ -134,4 +145,5 @@ pub enum RunState {
     PreRun,
     PlayerTurn,
     MonsterTurn,
+    ShowInventory,
 }

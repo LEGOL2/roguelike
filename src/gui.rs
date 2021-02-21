@@ -1,4 +1,6 @@
-use super::{gamelog::GameLog, CombatStats, Map, Name, Player, Position};
+use crate::InBackpack;
+
+use super::{gamelog::GameLog, CombatStats, Map, Name, Player, Position, State};
 use bracket_lib::prelude::*;
 use specs::prelude::*;
 
@@ -114,5 +116,75 @@ fn draw_tooltip(ecs: &World, ctx: &mut BTerm) {
                 &"<-".to_string(),
             );
         }
+    }
+}
+
+#[derive(PartialEq, Clone, Copy, Debug)]
+pub enum ItemMenuResult {
+    Cancel,
+    NoResponse,
+    Selected,
+}
+
+pub fn show_inventory(game_state: &mut State, ctx: &mut BTerm) -> ItemMenuResult {
+    let player_entity = game_state.ecs.fetch::<Entity>();
+    let names = game_state.ecs.read_storage::<Name>();
+    let backpack = game_state.ecs.read_storage::<InBackpack>();
+
+    let inventory = (&backpack, &names)
+        .join()
+        .filter(|item| item.0.owner == *player_entity);
+    let count = inventory.count();
+
+    let mut y = (25 - (count / 2)) as i32;
+    ctx.draw_box(
+        15,
+        y - 2,
+        31,
+        (count + 3) as i32,
+        RGB::named(WHITE),
+        RGB::named(BLACK),
+    );
+    ctx.print_color(
+        18,
+        y - 2,
+        RGB::named(YELLOW),
+        RGB::named(BLACK),
+        "Inventory",
+    );
+    ctx.print_color(
+        18,
+        y + count as i32 + 1,
+        RGB::named(YELLOW),
+        RGB::named(BLACK),
+        "ESCAPE to cancel",
+    );
+
+    let mut j = 0;
+    for (_pack, name) in (&backpack, &names)
+        .join()
+        .filter(|item| item.0.owner == *player_entity)
+    {
+        ctx.set(17, y, RGB::named(WHITE), RGB::named(BLACK), to_cp437('('));
+        ctx.set(
+            18,
+            y,
+            RGB::named(YELLOW),
+            RGB::named(BLACK),
+            97 + j as FontCharType,
+        );
+        ctx.set(19, y, RGB::named(WHITE), RGB::named(BLACK), to_cp437(')'));
+
+        ctx.print(21, y, &name.name.to_string());
+        y += 1;
+        j += 1;
+    }
+
+    match ctx.key {
+        None => ItemMenuResult::NoResponse,
+        Some(key) => match key {
+            VirtualKeyCode::Escape => ItemMenuResult::Cancel,
+            _ => ItemMenuResult::NoResponse,
+        },
     }
 }
