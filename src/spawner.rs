@@ -15,6 +15,7 @@ pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
             fg: RGB::named(YELLOW),
             bg: RGB::named(BLACK),
             glyph: to_cp437('@'),
+            render_order: 0,
         })
         .with(Player {})
         .with(Viewshed {
@@ -61,6 +62,7 @@ fn monster<S: ToString>(ecs: &mut World, x: i32, y: i32, glyph: FontCharType, na
             fg: RGB::named(RED),
             bg: RGB::named(BLACK),
             glyph: glyph,
+            render_order: 1,
         })
         .with(Viewshed {
             visible_tiles: Vec::new(),
@@ -137,6 +139,7 @@ fn health_potion(ecs: &mut World, x: i32, y: i32) {
             fg: RGB::named(MAGENTA),
             bg: RGB::named(BLACK),
             glyph: to_cp437('i'),
+            render_order: 2,
         })
         .with(Name {
             name: "Health Potion".to_string(),
