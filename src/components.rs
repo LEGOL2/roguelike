@@ -89,8 +89,8 @@ pub struct WantsToPickupItem {
 
 #[derive(Component, Debug, Clone)]
 pub struct WantsToUseItem {
-    pub item : Entity,
-    pub target : Option<Point>
+    pub item: Entity,
+    pub target: Option<Point>,
 }
 
 #[derive(Component, Debug, Clone)]
@@ -103,20 +103,20 @@ pub struct Consumable {}
 
 #[derive(Component, Debug)]
 pub struct Ranged {
-    pub range: i32
+    pub range: i32,
 }
 
 #[derive(Component, Debug)]
 pub struct InflictsDamage {
-    pub damage: i32
+    pub damage: i32,
 }
 
 #[derive(Component, Debug)]
 pub struct AreaOfEffect {
-    pub radius: i32
+    pub radius: i32,
 }
 
 #[derive(Component, Debug)]
 pub struct Confusion {
-    pub turns: i32
+    pub turns: i32,
 }

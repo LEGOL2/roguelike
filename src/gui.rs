@@ -276,12 +276,22 @@ pub fn drop_item_menu(game_state: &mut State, ctx: &mut BTerm) -> (ItemMenuResul
     }
 }
 
-pub fn ranged_target(gs: &mut State, ctx: &mut BTerm, range: i32) -> (ItemMenuResult, Option<Point>) {
+pub fn ranged_target(
+    gs: &mut State,
+    ctx: &mut BTerm,
+    range: i32,
+) -> (ItemMenuResult, Option<Point>) {
     let player_entity = gs.ecs.fetch::<Entity>();
     let player_pos = gs.ecs.fetch::<Point>();
     let viewsheds = gs.ecs.read_storage::<Viewshed>();
 
-    ctx.print_color(5, 0, RGB::named(YELLOW), RGB::named(BLACK), "Select Target:");
+    ctx.print_color(
+        5,
+        0,
+        RGB::named(YELLOW),
+        RGB::named(BLACK),
+        "Select Target:",
+    );
 
     let mut available_cells = Vec::new();
     let visible = viewsheds.get(*player_entity);
@@ -307,7 +317,10 @@ pub fn ranged_target(gs: &mut State, ctx: &mut BTerm, range: i32) -> (ItemMenuRe
     if valid_target {
         ctx.set_bg(mouse_pos.0, mouse_pos.1, RGB::named(CYAN));
         if ctx.left_click {
-            return (ItemMenuResult::Selected, Some(Point::new(mouse_pos.0, mouse_pos.1)));
+            return (
+                ItemMenuResult::Selected,
+                Some(Point::new(mouse_pos.0, mouse_pos.1)),
+            );
         } else {
             ctx.set_bg(mouse_pos.0, mouse_pos.1, RGB::named(RED));
             if ctx.left_click {

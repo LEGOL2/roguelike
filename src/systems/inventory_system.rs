@@ -56,7 +56,7 @@ impl<'a> System<'a> for ItemUseSystem {
         WriteStorage<'a, CombatStats>,
         WriteStorage<'a, SufferDamage>,
         ReadStorage<'a, AreaOfEffect>,
-        WriteStorage<'a, Confusion>
+        WriteStorage<'a, Confusion>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
@@ -73,7 +73,7 @@ impl<'a> System<'a> for ItemUseSystem {
             mut combat_stats,
             mut suffer_damage,
             aoe,
-            mut confused
+            mut confused,
         ) = data;
 
         for (entity, useitem) in (&entities, &wants_use).join() {
@@ -93,7 +93,9 @@ impl<'a> System<'a> for ItemUseSystem {
                         }
                         Some(area_effect) => {
                             let mut blast_tiles = field_of_view(target, area_effect.radius, &*map);
-                            blast_tiles.retain(|p| p.x > 0 && p.x < map.width-1 && p.y > 0 && p.y < map.height-1);
+                            blast_tiles.retain(|p| {
+                                p.x > 0 && p.x < map.width - 1 && p.y > 0 && p.y < map.height - 1
+                            });
                             for tile_idx in blast_tiles.iter() {
                                 let idx = map.xy_idx(tile_idx.x, tile_idx.y);
                                 for mob in map.tile_content[idx].iter() {
@@ -114,7 +116,11 @@ impl<'a> System<'a> for ItemUseSystem {
                         if let Some(stats) = stats {
                             stats.hp = i32::min(stats.max_hp, stats.hp + healer.heal_amount);
                             if entity == *player_entity {
-                                gamelog.entries.push(format!("You use the {}, healing {} hp.", names.get(useitem.item).unwrap().name, healer.heal_amount));
+                                gamelog.entries.push(format!(
+                                    "You use the {}, healing {} hp.",
+                                    names.get(useitem.item).unwrap().name,
+                                    healer.heal_amount
+                                ));
                             }
                             used_item = true;
                         }
@@ -132,7 +138,10 @@ impl<'a> System<'a> for ItemUseSystem {
                         if entity == *player_entity {
                             let mob_name = names.get(*mob).unwrap();
                             let item_name = names.get(useitem.item).unwrap();
-                            gamelog.entries.push(format!("You use {} on {}, inflicting {} hp.", item_name.name, mob_name.name, damage.damage));
+                            gamelog.entries.push(format!(
+                                "You use {} on {}, inflicting {} hp.",
+                                item_name.name, mob_name.name, damage.damage
+                            ));
                         }
 
                         used_item = true;
@@ -152,14 +161,19 @@ impl<'a> System<'a> for ItemUseSystem {
                             if entity == *player_entity {
                                 let mob_name = names.get(*mob).unwrap();
                                 let item_name = names.get(useitem.item).unwrap();
-                                gamelog.entries.push(format!("You use {} on {}, confusing them.", item_name.name, mob_name.name));
+                                gamelog.entries.push(format!(
+                                    "You use {} on {}, confusing them.",
+                                    item_name.name, mob_name.name
+                                ));
                             }
                         }
                     }
                 }
             }
             for mob in add_confusion.iter() {
-                confused.insert(mob.0, Confusion {turns: mob.1}).expect("Unable to insert status.");
+                confused
+                    .insert(mob.0, Confusion { turns: mob.1 })
+                    .expect("Unable to insert status.");
             }
 
             if used_item {

@@ -80,7 +80,7 @@ impl GameState for State {
             let positions = self.ecs.read_storage::<Position>();
             let renderables = self.ecs.read_storage::<Renderable>();
             let map = self.ecs.fetch::<Map>();
-    
+
             let mut data = (&positions, &renderables).join().collect::<Vec<_>>();
             data.sort_by(|&a, &b| b.1.render_order.cmp(&a.1.render_order));
             for (pos, render) in data.iter() {
@@ -89,7 +89,7 @@ impl GameState for State {
                     ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
                 }
             }
-    
+
             gui::draw_ui(&self.ecs, ctx);
         }
 
@@ -128,21 +128,23 @@ impl GameState for State {
                         let is_ranged = self.ecs.read_storage::<Ranged>();
                         let is_item_ranged = is_ranged.get(item_entity);
                         if let Some(is_item_ranged) = is_item_ranged {
-                            new_run_state = RunState::ShowTargeting{range: is_item_ranged.range, item: item_entity};
+                            new_run_state = RunState::ShowTargeting {
+                                range: is_item_ranged.range,
+                                item: item_entity,
+                            };
                         } else {
                             let mut intent = self.ecs.write_storage::<WantsToUseItem>();
                             intent
-                            .insert(
-                                *self.ecs.fetch::<Entity>(),
-                                WantsToUseItem {
-                                    item: item_entity,
-                                    target: None, 
-                                },
-                            )
-                            .expect("Unable to insert item");
+                                .insert(
+                                    *self.ecs.fetch::<Entity>(),
+                                    WantsToUseItem {
+                                        item: item_entity,
+                                        target: None,
+                                    },
+                                )
+                                .expect("Unable to insert item");
                             new_run_state = RunState::PlayerTurn;
-
-                        }               
+                        }
                     }
                 }
             }
@@ -171,7 +173,15 @@ impl GameState for State {
                     gui::ItemMenuResult::NoResponse => {}
                     gui::ItemMenuResult::Selected => {
                         let mut intent = self.ecs.write_storage::<WantsToUseItem>();
-                        intent.insert(*self.ecs.fetch::<Entity>(), WantsToUseItem {item, target: result.1}).expect("Unable to insert item.");
+                        intent
+                            .insert(
+                                *self.ecs.fetch::<Entity>(),
+                                WantsToUseItem {
+                                    item,
+                                    target: result.1,
+                                },
+                            )
+                            .expect("Unable to insert item.");
                         new_run_state = RunState::PlayerTurn;
                     }
                 }
@@ -218,5 +228,5 @@ pub enum RunState {
     MonsterTurn,
     ShowInventory,
     ShowDropItem,
-    ShowTargeting { range: i32, item: Entity},
+    ShowTargeting { range: i32, item: Entity },
 }

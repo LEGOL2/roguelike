@@ -164,52 +164,58 @@ fn health_potion(ecs: &mut World, x: i32, y: i32) {
 
 fn fireball_scroll(ecs: &mut World, x: i32, y: i32) {
     ecs.create_entity()
-        .with(Position {x, y})
+        .with(Position { x, y })
         .with(Renderable {
             glyph: to_cp437(')'),
             fg: RGB::named(ORANGE),
             bg: RGB::named(BLACK),
             render_order: 2,
         })
-        .with(Name {name: "Fireball Scroll".to_string()})
+        .with(Name {
+            name: "Fireball Scroll".to_string(),
+        })
         .with(Item {})
         .with(Consumable {})
-        .with(Ranged {range: 6})
-        .with(InflictsDamage {damage: 20})
-        .with(AreaOfEffect {radius: 3})
+        .with(Ranged { range: 6 })
+        .with(InflictsDamage { damage: 20 })
+        .with(AreaOfEffect { radius: 3 })
         .build();
 }
 
 fn magic_missle_scroll(ecs: &mut World, x: i32, y: i32) {
     ecs.create_entity()
-        .with(Position {x, y})
+        .with(Position { x, y })
         .with(Renderable {
             fg: RGB::named(CYAN),
             bg: RGB::named(BLACK),
             glyph: to_cp437(')'),
             render_order: 2,
         })
-        .with(Name {name: "Magic Missle Scroll".to_string()})
+        .with(Name {
+            name: "Magic Missle Scroll".to_string(),
+        })
         .with(Item {})
         .with(Consumable {})
-        .with(Ranged {range: 6})
-        .with(InflictsDamage {damage: 8})
+        .with(Ranged { range: 6 })
+        .with(InflictsDamage { damage: 8 })
         .build();
 }
 
 fn confusion_scroll(ecs: &mut World, x: i32, y: i32) {
     ecs.create_entity()
-        .with(Position {x, y})
+        .with(Position { x, y })
         .with(Renderable {
             glyph: to_cp437(')'),
             fg: RGB::named(PINK),
             bg: RGB::named(BLACK),
             render_order: 2,
         })
-        .with(Name {name: "Confusion Scroll".to_string()})
+        .with(Name {
+            name: "Confusion Scroll".to_string(),
+        })
         .with(Item {})
         .with(Consumable {})
-        .with(Ranged {range: 4})
-        .with(Confusion {turns: 4})
+        .with(Ranged { range: 4 })
+        .with(Confusion { turns: 4 })
         .build();
 }
