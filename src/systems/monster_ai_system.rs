@@ -68,7 +68,7 @@ impl<'a> System<'a> for MonsterAI {
                     let path = a_star_search(
                         map.xy_idx(pos.x, pos.y) as i32,
                         map.xy_idx(player_pos.x, player_pos.y) as i32,
-                        &mut *map,
+                        &*map,
                     );
                     if path.success && path.steps.len() > 1 {
                         let mut idx = map.xy_idx(pos.x, pos.y);
