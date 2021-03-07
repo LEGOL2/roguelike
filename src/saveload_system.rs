@@ -1,8 +1,5 @@
 use super::*;
-use bracket_lib::prelude::*;
-use serde::Serializer;
 use specs::error::NoError;
-use specs::prelude::*;
 use specs::saveload::{
     DeserializeComponents, MarkedBuilder, SerializeComponents, SimpleMarker, SimpleMarkerAllocator,
 };
@@ -85,7 +82,7 @@ pub fn save_game(ecs: &mut World) {
 }
 
 pub fn does_save_exists() -> bool {
-    std::path::Path::new("./savegame.json").exists()
+    Path::new("./savegame.json").exists()
 }
 
 pub fn load_game(ecs: &mut World) {
@@ -99,7 +96,7 @@ pub fn load_game(ecs: &mut World) {
         }
     }
 
-    let data = std::fs::read_to_string("./savegame.json").unwrap();
+    let data = fs::read_to_string("./savegame.json").unwrap();
     let mut de = serde_json::Deserializer::from_str(&data);
 
     {
@@ -161,7 +158,7 @@ pub fn load_game(ecs: &mut World) {
 }
 
 pub fn delete_save() {
-    if std::path::Path.new("./savegame.json").exists() {
-        std::fs::remove_file("./savegame.json").expect("Failed to delete save file.");
+    if Path::new("./savegame.json").exists() {
+        fs::remove_file("./savegame.json").expect("Failed to delete save file.");
     }
 }
