@@ -1,3 +1,5 @@
+use crate::gamelog::GameLog;
+
 use super::*;
 use bracket_lib::prelude::{BTerm, Point, VirtualKeyCode};
 use std::cmp::{max, min};
@@ -85,6 +87,13 @@ pub fn player_input(game_state: &mut State, ctx: &mut BTerm) -> RunState {
             // Drop item
             VirtualKeyCode::D => return RunState::ShowDropItem,
 
+            // Move downstairs
+            VirtualKeyCode::Period => {
+                if try_next_level(&mut game_state.ecs) {
+                    return RunState::NextLevel;
+                }
+            }
+
             // Save and Quit
             VirtualKeyCode::Escape => return RunState::SaveGame,
 
@@ -126,5 +135,20 @@ fn get_item(ecs: &mut World) {
         None => gamelog
             .entries
             .push("There is nothing to pick up.".to_string()),
+    }
+}
+
+pub fn try_next_level(ecs: &mut World) -> bool {
+    let player_pos = ecs.fetch::<Point>();
+    let map = ecs.fetch::<Map>();
+    let player_idx = map.xy_idx(player_pos.x, player_pos.y);
+    if map.tiles[player_idx] == TileType::DownStairs {
+        true
+    } else {
+        let mut gamelog = ecs.fetch_mut::<GameLog>();
+        gamelog
+            .entries
+            .push("There is no way down from here.".to_string());
+        false
     }
 }

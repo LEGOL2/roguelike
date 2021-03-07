@@ -1,4 +1,5 @@
 use bracket_lib::prelude::*;
+use gamelog::GameLog;
 use gui::{MainMenuResult, MainMenuSelection};
 use specs::prelude::*;
 use specs::saveload::{SimpleMarker, SimpleMarkerAllocator};
@@ -53,7 +54,7 @@ fn main() -> BError {
         .ecs
         .insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
-    let map = Map::new_map_rooms_and_corridors();
+    let map = Map::new_map_rooms_and_corridors(1);
     let player_pos = map.rooms[0].center();
 
     let player_entity = spawner::player(&mut game_state.ecs, player_pos.x, player_pos.y);
@@ -240,6 +241,10 @@ impl GameState for State {
                     menu_selection: MainMenuSelection::LoadGame,
                 };
             }
+            RunState::NextLevel => {
+                self.goto_next_level();
+                new_run_state = RunState::PreRun;
+            }
         }
 
         {
@@ -272,6 +277,83 @@ impl State {
 
         self.ecs.maintain();
     }
+
+    fn entities_to_remove_on_level_change(&mut self) -> Vec<Entity> {
+        let entities = self.ecs.entities();
+        let player = self.ecs.read_storage::<Player>();
+        let backpack = self.ecs.read_storage::<InBackpack>();
+        let player_entity = self.ecs.fetch::<Entity>();
+
+        let mut to_delete: Vec<Entity> = Vec::new();
+        for entity in entities.join() {
+            let mut should_delete = true;
+            let p = player.get(entity);
+            if let Some(_p) = p {
+                should_delete = false;
+            }
+
+            let bp = backpack.get(entity);
+            if let Some(bp) = bp {
+                if bp.owner == *player_entity {
+                    should_delete = false;
+                }
+            }
+
+            if should_delete {
+                to_delete.push(entity);
+            }
+        }
+
+        to_delete
+    }
+
+    fn goto_next_level(&mut self) {
+        let to_delete = self.entities_to_remove_on_level_change();
+        for target in to_delete {
+            self.ecs
+                .delete_entity(target)
+                .expect("Failed to delete an Entity");
+        }
+
+        let worldmap;
+        {
+            let mut worldmap_resource = self.ecs.write_resource::<Map>();
+            let current_depth = worldmap_resource.depth;
+            *worldmap_resource = Map::new_map_rooms_and_corridors(current_depth + 1);
+            worldmap = worldmap_resource.clone();
+        }
+
+        for room in worldmap.rooms.iter().skip(1) {
+            spawner::spawn_room(&mut self.ecs, room);
+        }
+
+        let player_pos = worldmap.rooms[0].center();
+        let mut player_position = self.ecs.write_resource::<Point>();
+        *player_position = Point::new(player_pos.x, player_pos.y);
+        let mut position_components = self.ecs.write_storage::<Position>();
+        let player_entity = self.ecs.fetch::<Entity>();
+        let player_pos_comp = position_components.get_mut(*player_entity);
+        if let Some(player_pos_comp) = player_pos_comp {
+            player_pos_comp.x = player_pos.x;
+            player_pos_comp.y = player_pos.y;
+        }
+
+        let mut viewshed_componens = self.ecs.write_component::<Viewshed>();
+        let vs = viewshed_componens.get_mut(*player_entity);
+        if let Some(vs) = vs {
+            vs.dirty = true;
+        }
+
+        let mut gamelog = self.ecs.fetch_mut::<GameLog>();
+        gamelog
+            .entries
+            .push("You have descended to the next level, and took a moment to heal".to_string());
+        let mut player_health_store = self.ecs.write_storage::<CombatStats>();
+        let player_health = player_health_store.get_mut(*player_entity);
+        if let Some(player_health) = player_health {
+            player_health.hp = i32::max(player_health.hp, player_health.max_hp / 2);
+        }
+    }
 }
 
 #[derive(PartialEq, Clone, Copy)]
@@ -290,4 +372,5 @@ pub enum RunState {
         menu_selection: gui::MainMenuSelection,
     },
     SaveGame,
+    NextLevel,
 }

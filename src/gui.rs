@@ -20,6 +20,10 @@ pub enum MainMenuResult {
 pub fn draw_ui(ecs: &World, ctx: &mut BTerm) {
     ctx.draw_box(0, 43, 79, 6, RGB::named(WHITE), RGB::named(BLACK));
 
+    let map = ecs.fetch::<Map>();
+    let depth = format!("Depth: {}", map.depth);
+    ctx.print_color(2, 43, RGB::named(YELLOW), RGB::named(BLACK), &depth);
+
     let combat_stats = ecs.read_storage::<CombatStats>();
     let players = ecs.read_storage::<Player>();
     for (_player, stats) in (&players, &combat_stats).join() {
