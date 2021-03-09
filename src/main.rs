@@ -19,6 +19,7 @@ mod gamelog;
 mod gui;
 mod saveload_system;
 mod spawner;
+mod random_table;
 
 fn main() -> BError {
     let context = BTermBuilder::simple80x50()
@@ -61,7 +62,7 @@ fn main() -> BError {
 
     game_state.ecs.insert(RandomNumberGenerator::new());
     for room in map.rooms.iter().skip(1) {
-        spawner::spawn_room(&mut game_state.ecs, room);
+        spawner::spawn_room(&mut game_state.ecs, room, 1);
     }
 
     game_state.ecs.insert(map);
@@ -316,15 +317,16 @@ impl State {
         }
 
         let worldmap;
+        let current_depth;
         {
             let mut worldmap_resource = self.ecs.write_resource::<Map>();
-            let current_depth = worldmap_resource.depth;
+            current_depth = worldmap_resource.depth;
             *worldmap_resource = Map::new_map_rooms_and_corridors(current_depth + 1);
             worldmap = worldmap_resource.clone();
         }
 
         for room in worldmap.rooms.iter().skip(1) {
-            spawner::spawn_room(&mut self.ecs, room);
+            spawner::spawn_room(&mut self.ecs, room, current_depth + 1);
         }
 
         let player_pos = worldmap.rooms[0].center();
