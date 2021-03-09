@@ -79,7 +79,9 @@ pub fn player_input(game_state: &mut State, ctx: &mut BTerm) -> RunState {
             VirtualKeyCode::Numpad1 => try_move_player(-1, 1, &mut game_state.ecs),
 
             // Skip Turn
-            VirtualKeyCode::Numpad5 | VirtualKeyCode::Space => return skip_turn(&mut game_state.ecs),
+            VirtualKeyCode::Numpad5 | VirtualKeyCode::Space => {
+                return skip_turn(&mut game_state.ecs)
+            }
 
             // Pickup item
             VirtualKeyCode::G => get_item(&mut game_state.ecs),
@@ -121,7 +123,7 @@ fn skip_turn(ecs: &mut World) -> RunState {
         for entity_id in worldmap_resource.tile_content[idx].iter() {
             let mob = monsters.get(*entity_id);
             match mob {
-                None => {},
+                None => {}
                 Some(_) => can_heal = false,
             }
         }

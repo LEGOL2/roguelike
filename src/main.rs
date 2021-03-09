@@ -17,9 +17,9 @@ pub use systems::{
 };
 mod gamelog;
 mod gui;
+mod random_table;
 mod saveload_system;
 mod spawner;
-mod random_table;
 
 fn main() -> BError {
     let context = BTermBuilder::simple80x50()
