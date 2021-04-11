@@ -309,7 +309,15 @@ impl<'a> System<'a> for ItemRemoveSystem {
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (player_entity, entities, mut wants_remove, mut equipped, mut backpack, mut gamelog, names) = data;
+        let (
+            player_entity,
+            entities,
+            mut wants_remove,
+            mut equipped,
+            mut backpack,
+            mut gamelog,
+            names,
+        ) = data;
 
         for (entity, to_remove) in (&entities, &mut wants_remove).join() {
             equipped.remove(to_remove.item);

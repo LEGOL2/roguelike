@@ -522,14 +522,34 @@ pub enum GameOverResult {
 }
 
 pub fn game_over(ctx: &mut BTerm) -> GameOverResult {
-    ctx.print_color_centered(15, RGB::named(YELLOW), RGB::named(BLACK), "Your journey has ended!");
-    ctx.print_color_centered(17, RGB::named(WHITE), RGB::named(BLACK), "One day, we'll tell you all about how you did.");
-    ctx.print_color_centered(18, RGB::named(WHITE), RGB::named(BLACK), "That day, sadly, is not in this chapter..");
+    ctx.print_color_centered(
+        15,
+        RGB::named(YELLOW),
+        RGB::named(BLACK),
+        "Your journey has ended!",
+    );
+    ctx.print_color_centered(
+        17,
+        RGB::named(WHITE),
+        RGB::named(BLACK),
+        "One day, we'll tell you all about how you did.",
+    );
+    ctx.print_color_centered(
+        18,
+        RGB::named(WHITE),
+        RGB::named(BLACK),
+        "That day, sadly, is not in this chapter..",
+    );
 
-    ctx.print_color_centered(20, RGB::named(MAGENTA), RGB::named(BLACK), "Press any key to return to the menu.");
+    ctx.print_color_centered(
+        20,
+        RGB::named(MAGENTA),
+        RGB::named(BLACK),
+        "Press any key to return to the menu.",
+    );
 
     match ctx.key {
         None => GameOverResult::NoSelection,
-        Some(_) => GameOverResult::QuitToMenu
+        Some(_) => GameOverResult::QuitToMenu,
     }
 }

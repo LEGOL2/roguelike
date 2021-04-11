@@ -1,4 +1,4 @@
-use super::{gamelog::GameLog, CombatStats, Name, Player, SufferDamage, RunState};
+use super::{gamelog::GameLog, CombatStats, Name, Player, RunState, SufferDamage};
 use specs::prelude::*;
 
 pub struct DamageSystem {}

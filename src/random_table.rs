@@ -30,8 +30,9 @@ impl RandomTable {
 
     pub fn add<S: ToString>(mut self, name: S, weight: i32) -> RandomTable {
         if weight > 0 {
-            self.entries.push(RandomEntry::new(name.to_string(), weight));
-            self.total_weight += weight; 
+            self.entries
+                .push(RandomEntry::new(name.to_string(), weight));
+            self.total_weight += weight;
         }
 
         self

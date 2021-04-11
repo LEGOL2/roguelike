@@ -236,17 +236,21 @@ fn dagger(ecs: &mut World, x: i32, y: i32) {
 
 fn longsword(ecs: &mut World, x: i32, y: i32) {
     ecs.create_entity()
-        .with(Position{ x, y })
-        .with(Renderable{
+        .with(Position { x, y })
+        .with(Renderable {
             glyph: to_cp437('/'),
             fg: RGB::named(YELLOW),
             bg: RGB::named(BLACK),
-            render_order: 2
+            render_order: 2,
         })
-        .with(Name{ name : "Longsword".to_string() })
-        .with(Item{})
-        .with(Equippable{ slot: EquipmentSlot::Melee })
-        .with(MeleePowerBonus{ power: 4 })
+        .with(Name {
+            name: "Longsword".to_string(),
+        })
+        .with(Item {})
+        .with(Equippable {
+            slot: EquipmentSlot::Melee,
+        })
+        .with(MeleePowerBonus { power: 4 })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }
@@ -274,17 +278,21 @@ fn shield(ecs: &mut World, x: i32, y: i32) {
 
 fn tower_shield(ecs: &mut World, x: i32, y: i32) {
     ecs.create_entity()
-        .with(Position{ x, y })
-        .with(Renderable{
+        .with(Position { x, y })
+        .with(Renderable {
             glyph: to_cp437('('),
             fg: RGB::named(YELLOW),
             bg: RGB::named(BLACK),
-            render_order: 2
+            render_order: 2,
         })
-        .with(Name{ name : "Tower Shield".to_string() })
-        .with(Item{})
-        .with(Equippable{ slot: EquipmentSlot::Shield })
-        .with(DefenseBonus{ defense: 3 })
+        .with(Name {
+            name: "Tower Shield".to_string(),
+        })
+        .with(Item {})
+        .with(Equippable {
+            slot: EquipmentSlot::Shield,
+        })
+        .with(DefenseBonus { defense: 3 })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }
