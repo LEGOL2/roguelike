@@ -76,7 +76,8 @@ pub fn save_game(ecs: &mut World) {
             WantsToDropItem,
             SerializationHelper,
             Equippable,
-            Equipped
+            Equipped,
+            WantsToRemoveItem
         );
     }
 
@@ -134,7 +135,8 @@ pub fn load_game(ecs: &mut World) {
             WantsToDropItem,
             SerializationHelper,
             Equippable,
-            Equipped
+            Equipped,
+            WantsToRemoveItem
         );
     }
 

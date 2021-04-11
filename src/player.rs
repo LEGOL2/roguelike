@@ -92,6 +92,9 @@ pub fn player_input(game_state: &mut State, ctx: &mut BTerm) -> RunState {
             // Drop item
             VirtualKeyCode::D => return RunState::ShowDropItem,
 
+            // Unequip item
+            VirtualKeyCode::R => return RunState::ShowRemoveItem,
+
             // Move downstairs
             VirtualKeyCode::Period => {
                 if try_next_level(&mut game_state.ecs) {

@@ -1,4 +1,7 @@
-use super::{gamelog::GameLog, CombatStats, Name, SufferDamage, WantsToMelee, MeleePowerBonus, DefenseBonus, Equipped};
+use super::{
+    gamelog::GameLog, CombatStats, DefenseBonus, Equipped, MeleePowerBonus, Name, SufferDamage,
+    WantsToMelee,
+};
 use specs::prelude::*;
 
 pub struct MeleeCombatSystem {}
@@ -17,13 +20,26 @@ impl<'a> System<'a> for MeleeCombatSystem {
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (entities, mut log, mut wants_melee, names, combat_stats, mut inflict_damage, melee_power_bonuses, defense_bonuses, equipped) = data;
+        let (
+            entities,
+            mut log,
+            mut wants_melee,
+            names,
+            combat_stats,
+            mut inflict_damage,
+            melee_power_bonuses,
+            defense_bonuses,
+            equipped,
+        ) = data;
 
         for (entity, wants_melee, name, stats) in
-            (&entities, &mut wants_melee, &names, &combat_stats).join() {
+            (&entities, &mut wants_melee, &names, &combat_stats).join()
+        {
             if stats.hp > 0 {
                 let mut offensive_bonus = 0;
-                for (_item_entity, power_bonus, equipped_by) in (&entities, &melee_power_bonuses, &equipped).join() {
+                for (_item_entity, power_bonus, equipped_by) in
+                    (&entities, &melee_power_bonuses, &equipped).join()
+                {
                     if equipped_by.owner == entity {
                         offensive_bonus += power_bonus.power;
                     }
@@ -33,14 +49,19 @@ impl<'a> System<'a> for MeleeCombatSystem {
                 if target_stats.hp > 0 {
                     let target_name = names.get(wants_melee.target).unwrap();
 
-                    let mut defensive_bonus  = 0;
-                    for (_item_entity, defense_bonus, equipped_by) in (&entities, &defense_bonuses, &equipped).join() {
+                    let mut defensive_bonus = 0;
+                    for (_item_entity, defense_bonus, equipped_by) in
+                        (&entities, &defense_bonuses, &equipped).join()
+                    {
                         if equipped_by.owner == wants_melee.target {
-                            defensive_bonus  += defense_bonus.defense;
+                            defensive_bonus += defense_bonus.defense;
                         }
                     }
 
-                    let damage = i32::max(0, (stats.power + offensive_bonus) - (target_stats.defense + defensive_bonus));
+                    let damage = i32::max(
+                        0,
+                        (stats.power + offensive_bonus) - (target_stats.defense + defensive_bonus),
+                    );
                     if damage == 0 {
                         log.entries.push(format!(
                             "{} is unable to hurt {}.",
