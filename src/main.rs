@@ -13,7 +13,7 @@ pub use player::*;
 mod systems;
 pub use systems::{
     damage_system::*, inventory_system::*, map_indexing_system::*, melee_combat_system::*,
-    monster_ai_system::*, visibility_system::*,
+    monster_ai_system::*, particle_system::*, visibility_system::*,
 };
 mod gamelog;
 mod gui;
@@ -55,6 +55,7 @@ fn main() -> BError {
     game_state.ecs.register::<MeleePowerBonus>();
     game_state.ecs.register::<DefenseBonus>();
     game_state.ecs.register::<WantsToRemoveItem>();
+    game_state.ecs.register::<ParticleLifetime>();
 
     game_state
         .ecs
@@ -79,6 +80,7 @@ fn main() -> BError {
     game_state.ecs.insert(gamelog::GameLog {
         entries: vec!["Welcome to the Dungeon".to_string()],
     });
+    game_state.ecs.insert(ParticleBuilder::new());
 
     main_loop(context, game_state)
 }
@@ -90,6 +92,7 @@ pub struct State {
 impl GameState for State {
     fn tick(&mut self, ctx: &mut BTerm) {
         ctx.cls();
+        cull_dead_particles(&mut self.ecs, ctx);
 
         let mut new_run_state;
         {
@@ -312,6 +315,8 @@ impl State {
         drop_items.run_now(&self.ecs);
         let mut item_remove = ItemRemoveSystem {};
         item_remove.run_now(&self.ecs);
+        let mut particles = ParticleSpawnSystem {};
+        particles.run_now(&self.ecs);
 
         self.ecs.maintain();
     }

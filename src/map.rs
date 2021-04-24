@@ -102,7 +102,7 @@ impl Map {
                 if !map.rooms.is_empty() {
                     let new = new_room.center();
                     let prev = map.rooms[map.rooms.len() - 1].center();
-                    if rng.range(1, 2) == 1 {
+                    if rng.range(0, 2) == 1 {
                         map.apply_horizontal_tunnel(prev.x, new.x, prev.y);
                         map.apply_vertical_tunnel(prev.y, new.y, new.x);
                     } else {
@@ -232,7 +232,7 @@ pub fn draw_map(ecs: &World, ctx: &mut BTerm) {
         }
 
         x += 1;
-        if x > 79 {
+        if x > MAPWIDTH as i32 - 1 {
             x = 0;
             y += 1;
         }
@@ -240,8 +240,12 @@ pub fn draw_map(ecs: &World, ctx: &mut BTerm) {
 }
 
 fn wall_glyph(map: &Map, x: i32, y: i32) -> FontCharType {
-    if x < 1 || x > map.width - 2 || y < 1 || y > map.height - 2 as i32 {
-        return 35;
+    if x < 1 || x > map.width - 2 as i32 {
+        return 186;
+    }
+
+    if y < 1 || y > map.height - 2 as i32 {
+        return 205;
     }
 
     let mut mask: u8 = 0;

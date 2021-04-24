@@ -77,7 +77,8 @@ pub fn save_game(ecs: &mut World) {
             SerializationHelper,
             Equippable,
             Equipped,
-            WantsToRemoveItem
+            WantsToRemoveItem,
+            ParticleLifetime
         );
     }
 
@@ -136,7 +137,8 @@ pub fn load_game(ecs: &mut World) {
             SerializationHelper,
             Equippable,
             Equipped,
-            WantsToRemoveItem
+            WantsToRemoveItem,
+            ParticleLifetime
         );
     }
 
