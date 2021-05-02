@@ -167,3 +167,6 @@ pub struct WantsToRemoveItem {
 pub struct ParticleLifetime {
     pub lifetime_ms: f32,
 }
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct MagicMapper {}

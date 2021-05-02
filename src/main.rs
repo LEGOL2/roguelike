@@ -56,6 +56,7 @@ fn main() -> BError {
     game_state.ecs.register::<DefenseBonus>();
     game_state.ecs.register::<WantsToRemoveItem>();
     game_state.ecs.register::<ParticleLifetime>();
+    game_state.ecs.register::<MagicMapper>();
 
     game_state
         .ecs
@@ -151,9 +152,14 @@ impl GameState for State {
                 new_run_state = player_input(self, ctx);
             }
             RunState::PlayerTurn => {
-                self.run_systems();
+                self.run_systems(); // change to dispatcher!
                 self.ecs.maintain();
-                new_run_state = RunState::MonsterTurn;
+                match *self.ecs.fetch::<RunState>() {
+                    RunState::MagicMapReveal { .. } => {
+                        new_run_state = RunState::MagicMapReveal { row: 0 }
+                    }
+                    _ => new_run_state = RunState::MonsterTurn,
+                }
             }
             RunState::MonsterTurn => {
                 self.run_systems();
@@ -282,6 +288,18 @@ impl GameState for State {
                             menu_selection: gui::MainMenuSelection::NewGame,
                         };
                     }
+                }
+            }
+            RunState::MagicMapReveal { row } => {
+                let mut map = self.ecs.fetch_mut::<Map>();
+                for x in 0..MAPWIDTH {
+                    let idx = map.xy_idx(x as i32, row);
+                    map.revealed_tiles[idx] = true;
+                }
+                if row as usize == MAPHEIGHT - 1 {
+                    new_run_state = RunState::MonsterTurn;
+                } else {
+                    new_run_state = RunState::MagicMapReveal { row: row + 1 };
                 }
             }
         }
@@ -473,4 +491,7 @@ pub enum RunState {
     NextLevel,
     ShowRemoveItem,
     GameOver,
+    MagicMapReveal {
+        row: i32,
+    },
 }

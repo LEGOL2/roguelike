@@ -45,7 +45,7 @@ impl<'a> System<'a> for ItemUseSystem {
     type SystemData = (
         ReadExpect<'a, Entity>,
         WriteExpect<'a, gamelog::GameLog>,
-        ReadExpect<'a, Map>,
+        WriteExpect<'a, Map>,
         Entities<'a>,
         WriteStorage<'a, WantsToUseItem>,
         ReadStorage<'a, Name>,
@@ -61,6 +61,8 @@ impl<'a> System<'a> for ItemUseSystem {
         WriteStorage<'a, InBackpack>,
         WriteExpect<'a, ParticleBuilder>,
         ReadStorage<'a, Position>,
+        ReadStorage<'a, MagicMapper>,
+        WriteExpect<'a, RunState>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
@@ -83,6 +85,8 @@ impl<'a> System<'a> for ItemUseSystem {
             mut backpack,
             mut particle_builder,
             positions,
+            magic_mapper,
+            mut runstate,
         ) = data;
 
         for (entity, useitem) in (&entities, &wants_use).join() {
@@ -169,6 +173,7 @@ impl<'a> System<'a> for ItemUseSystem {
                 }
             }
 
+            // Healing potion
             let item_heals = healing.get(useitem.item);
             match item_heals {
                 None => {}
@@ -202,6 +207,7 @@ impl<'a> System<'a> for ItemUseSystem {
                 }
             }
 
+            // Dealing damage
             let item_damages = inflict_damage.get(useitem.item);
             match item_damages {
                 None => {}
@@ -235,6 +241,7 @@ impl<'a> System<'a> for ItemUseSystem {
                 }
             }
 
+            // Confusion scroll
             let mut add_confusion = Vec::new();
             {
                 let causes_confusion = confused.get(useitem.item);
@@ -272,6 +279,16 @@ impl<'a> System<'a> for ItemUseSystem {
                 confused
                     .insert(mob.0, Confusion { turns: mob.1 })
                     .expect("Unable to insert status.");
+            }
+
+            // Scroll of magic mapping
+            let is_mapper = magic_mapper.get(useitem.item);
+            if let Some(_) = is_mapper {
+                used_item = true;
+                gamelog
+                    .entries
+                    .push("The map is revealed to you!".to_string());
+                *runstate = RunState::MagicMapReveal { row: 0 };
             }
 
             if used_item {
