@@ -18,6 +18,7 @@ pub use systems::{
 mod gamelog;
 mod gui;
 mod random_table;
+mod rex_assets;
 mod saveload_system;
 mod spawner;
 
@@ -77,11 +78,14 @@ fn main() -> BError {
         .ecs
         .insert(Point::new(player_pos.x, player_pos.y));
     game_state.ecs.insert(player_entity);
-    game_state.ecs.insert(RunState::PreRun);
+    game_state.ecs.insert(RunState::MainMenu {
+        menu_selection: gui::MainMenuSelection::NewGame,
+    });
     game_state.ecs.insert(gamelog::GameLog {
         entries: vec!["Welcome to the Dungeon".to_string()],
     });
     game_state.ecs.insert(ParticleBuilder::new());
+    game_state.ecs.insert(rex_assets::RexAssets::new());
 
     main_loop(context, game_state)
 }
