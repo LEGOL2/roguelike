@@ -1,8 +1,8 @@
 use crate::{InBackpack, Viewshed};
 
 use super::{
-    gamelog::GameLog, rex_assets::RexAssets, CombatStats, Equipped, HungerClock, Map, Name, Player,
-    Position, RunState, State,
+    gamelog::GameLog, rex_assets::RexAssets, CombatStats, Equipped, Hidden, HungerClock, Map, Name,
+    Player, Position, RunState, State,
 };
 use bracket_lib::prelude::*;
 use specs::prelude::*;
@@ -77,6 +77,7 @@ fn draw_tooltip(ecs: &World, ctx: &mut BTerm) {
     let map = ecs.fetch::<Map>();
     let names = ecs.read_storage::<Name>();
     let positions = ecs.read_storage::<Position>();
+    let hidden = ecs.read_storage::<Hidden>();
     const TOOLTIP_BG: (u8, u8, u8) = (100, 100, 100);
 
     let mouse_pos = ctx.mouse_pos();
@@ -84,7 +85,7 @@ fn draw_tooltip(ecs: &World, ctx: &mut BTerm) {
         return;
     }
     let mut tooltip: Vec<String> = Vec::new();
-    for (name, position) in (&names, &positions).join() {
+    for (name, position, _hidden) in (&names, &positions, !&hidden).join() {
         let idx = map.xy_idx(position.x, position.y);
         if position.x == mouse_pos.0 && position.y == mouse_pos.1 && map.visible_tiles[idx] {
             tooltip.push(name.name.to_string());

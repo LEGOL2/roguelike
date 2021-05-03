@@ -81,7 +81,11 @@ pub fn save_game(ecs: &mut World) {
             ParticleLifetime,
             MagicMapper,
             HungerClock,
-            ProvidesFood
+            ProvidesFood,
+            Hidden,
+            EntryTrigger,
+            EntityMoved,
+            SingleActivation
         );
     }
 
@@ -144,7 +148,11 @@ pub fn load_game(ecs: &mut World) {
             ParticleLifetime,
             MagicMapper,
             HungerClock,
-            ProvidesFood
+            ProvidesFood,
+            Hidden,
+            EntryTrigger,
+            EntityMoved,
+            SingleActivation
         );
     }
 

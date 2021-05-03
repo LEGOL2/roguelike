@@ -13,7 +13,8 @@ pub use player::*;
 mod systems;
 pub use systems::{
     damage_system::*, hunger_system::*, inventory_system::*, map_indexing_system::*,
-    melee_combat_system::*, monster_ai_system::*, particle_system::*, visibility_system::*,
+    melee_combat_system::*, monster_ai_system::*, particle_system::*, trigger_system::*,
+    visibility_system::*,
 };
 mod gamelog;
 mod gui;
@@ -60,6 +61,10 @@ fn main() -> BError {
     game_state.ecs.register::<MagicMapper>();
     game_state.ecs.register::<HungerClock>();
     game_state.ecs.register::<ProvidesFood>();
+    game_state.ecs.register::<Hidden>();
+    game_state.ecs.register::<EntryTrigger>();
+    game_state.ecs.register::<EntityMoved>();
+    game_state.ecs.register::<SingleActivation>();
 
     game_state
         .ecs
@@ -132,11 +137,14 @@ impl GameState for State {
                 {
                     let positions = self.ecs.read_storage::<Position>();
                     let renderables = self.ecs.read_storage::<Renderable>();
+                    let hidden = self.ecs.read_storage::<Hidden>();
                     let map = self.ecs.fetch::<Map>();
 
-                    let mut data = (&positions, &renderables).join().collect::<Vec<_>>();
+                    let mut data = (&positions, &renderables, !&hidden)
+                        .join()
+                        .collect::<Vec<_>>();
                     data.sort_by(|&a, &b| b.1.render_order.cmp(&a.1.render_order));
-                    for (pos, render) in data.iter() {
+                    for (pos, render, _hidden) in data.iter() {
                         let idx = map.xy_idx(pos.x, pos.y);
                         if map.visible_tiles[idx] {
                             ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
@@ -325,6 +333,8 @@ impl State {
         vis.run_now(&self.ecs);
         let mut mob = MonsterAI {};
         mob.run_now(&self.ecs);
+        let mut triggers = TriggerSystem {};
+        triggers.run_now(&self.ecs);
         let mut map_index = MapIndexingSystem {};
         map_index.run_now(&self.ecs);
         let mut melee = MeleeCombatSystem {};

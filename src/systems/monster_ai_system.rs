@@ -1,4 +1,7 @@
-use super::{Confusion, Map, Monster, ParticleBuilder, Position, RunState, Viewshed, WantsToMelee};
+use super::{
+    Confusion, EntityMoved, Map, Monster, ParticleBuilder, Position, RunState, Viewshed,
+    WantsToMelee,
+};
 use bracket_lib::prelude::*;
 use specs::prelude::*;
 
@@ -17,6 +20,7 @@ impl<'a> System<'a> for MonsterAI {
         WriteStorage<'a, WantsToMelee>,
         WriteStorage<'a, Confusion>,
         WriteExpect<'a, ParticleBuilder>,
+        WriteStorage<'a, EntityMoved>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
@@ -32,6 +36,7 @@ impl<'a> System<'a> for MonsterAI {
             mut wants_to_melee,
             mut confused,
             mut particle_builder,
+            mut entity_moved,
         ) = data;
 
         if *runstate != RunState::MonsterTurn {
@@ -86,6 +91,9 @@ impl<'a> System<'a> for MonsterAI {
                         idx = map.xy_idx(pos.x, pos.y);
                         map.blocked[idx] = true;
                         viewshed.dirty = true;
+                        entity_moved
+                            .insert(entity, EntityMoved {})
+                            .expect("Failed to insert marker.");
                     }
                 }
             }

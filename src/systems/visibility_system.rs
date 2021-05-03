@@ -1,7 +1,7 @@
 use specs::prelude::*;
 
-use super::{Map, Player, Position, Viewshed};
-use bracket_lib::prelude::{field_of_view, Point};
+use super::{Map, Player, Position, Viewshed, Hidden, Name, GameLog};
+use bracket_lib::prelude::{field_of_view, Point, RandomNumberGenerator};
 
 pub struct VisibilitySystem {}
 
@@ -12,10 +12,14 @@ impl<'a> System<'a> for VisibilitySystem {
         WriteStorage<'a, Viewshed>,
         ReadStorage<'a, Position>,
         ReadStorage<'a, Player>,
+        WriteStorage<'a, Hidden>,
+        WriteExpect<'a, RandomNumberGenerator>,
+        WriteExpect<'a, GameLog>,
+        ReadStorage<'a, Name>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (mut map, entities, mut viewshed, pos, player) = data;
+        let (mut map, entities, mut viewshed, pos, player, mut hidden, mut rng, mut log, names) = data;
         for (ent, viewshed, pos) in (&entities, &mut viewshed, &pos).join() {
             if viewshed.dirty {
                 viewshed.dirty = false;
@@ -34,6 +38,19 @@ impl<'a> System<'a> for VisibilitySystem {
                         let idx = map.xy_idx(vis.x, vis.y);
                         map.revealed_tiles[idx] = true;
                         map.visible_tiles[idx] = true;
+
+                        for e in map.tile_content[idx].iter() {
+                            let maybe_hidden = hidden.get(*e);
+                            if let Some(_) = maybe_hidden {
+                                if rng.roll_dice(1, 30) == 1 {
+                                    let name = names.get(*e);
+                                    if let Some(name) = name {
+                                        log.entries.push(format!("You've spotted a {}.", &name.name));
+                                    }
+                                    hidden.remove(*e);
+                                }
+                            }
+                        }
                     }
                 }
             }
