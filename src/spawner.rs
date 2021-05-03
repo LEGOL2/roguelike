@@ -33,6 +33,10 @@ pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
             defense: 2,
             power: 5,
         })
+        .with(HungerClock {
+            state: HungerState::WellFed,
+            duration: 20,
+        })
         .marked::<SimpleMarker<SerializeMe>>()
         .build()
 }
@@ -115,6 +119,7 @@ pub fn spawn_room(ecs: &mut World, room: &Rect, map_depth: i32) {
             "Longsword" => longsword(ecs, x, y),
             "Tower Shield" => tower_shield(ecs, x, y),
             "Magic Mapping Scroll" => magic_mapping_scroll(ecs, x, y),
+            "Rations" => rations(ecs, x, y),
             _ => {}
         }
     }
@@ -133,6 +138,7 @@ fn room_table(map_depth: i32) -> random_table::RandomTable {
         .add("Longsword", map_depth - 1)
         .add("Tower Shield", map_depth - 1)
         .add("Magic Mapping Scroll", 2)
+        .add("Rations", 10)
 }
 
 fn health_potion(ecs: &mut World, x: i32, y: i32) {
@@ -313,6 +319,25 @@ fn magic_mapping_scroll(ecs: &mut World, x: i32, y: i32) {
         })
         .with(Item {})
         .with(MagicMapper {})
+        .with(Consumable {})
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+}
+
+fn rations(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position { x, y })
+        .with(Renderable {
+            glyph: to_cp437('%'),
+            fg: RGB::named(GREEN),
+            bg: RGB::named(BLACK),
+            render_order: 2,
+        })
+        .with(Name {
+            name: "Rations".to_string(),
+        })
+        .with(Item {})
+        .with(ProvidesFood {})
         .with(Consumable {})
         .marked::<SimpleMarker<SerializeMe>>()
         .build();

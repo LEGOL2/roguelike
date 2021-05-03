@@ -1,8 +1,8 @@
 use crate::{InBackpack, Viewshed};
 
 use super::{
-    gamelog::GameLog, rex_assets::RexAssets, CombatStats, Equipped, Map, Name, Player, Position,
-    RunState, State,
+    gamelog::GameLog, rex_assets::RexAssets, CombatStats, Equipped, HungerClock, Map, Name, Player,
+    Position, RunState, State,
 };
 use bracket_lib::prelude::*;
 use specs::prelude::*;
@@ -29,7 +29,8 @@ pub fn draw_ui(ecs: &World, ctx: &mut BTerm) {
 
     let combat_stats = ecs.read_storage::<CombatStats>();
     let players = ecs.read_storage::<Player>();
-    for (_player, stats) in (&players, &combat_stats).join() {
+    let hunger = ecs.read_storage::<HungerClock>();
+    for (_player, stats, hunger_clock) in (&players, &combat_stats, &hunger).join() {
         let health = format!(" HP: {} / {} ", stats.hp, stats.max_hp);
         ctx.print_color(12, 43, RGB::named(YELLOW), RGB::named(BLACK), &health);
 
@@ -42,6 +43,19 @@ pub fn draw_ui(ecs: &World, ctx: &mut BTerm) {
             RGB::named(RED),
             RGB::named(BLACK),
         );
+
+        match hunger_clock.state {
+            crate::HungerState::WellFed => {
+                ctx.print_color(71, 42, RGB::named(GREEN), RGB::named(BLACK), "Well Fed")
+            }
+            crate::HungerState::Normal => {}
+            crate::HungerState::Hungry => {
+                ctx.print_color(71, 42, RGB::named(ORANGE), RGB::named(BLACK), "Hungry")
+            }
+            crate::HungerState::Starving => {
+                ctx.print_color(71, 42, RGB::named(RED), RGB::named(BLACK), "Starving")
+            }
+        }
     }
 
     let log = ecs.fetch::<GameLog>();
@@ -63,6 +77,7 @@ fn draw_tooltip(ecs: &World, ctx: &mut BTerm) {
     let map = ecs.fetch::<Map>();
     let names = ecs.read_storage::<Name>();
     let positions = ecs.read_storage::<Position>();
+    const TOOLTIP_BG: (u8, u8, u8) = (100, 100, 100);
 
     let mouse_pos = ctx.mouse_pos();
     if mouse_pos.0 >= map.width || mouse_pos.1 >= map.height {
@@ -90,14 +105,14 @@ fn draw_tooltip(ecs: &World, ctx: &mut BTerm) {
             let left_x = mouse_pos.0 - width;
             let mut y = mouse_pos.1;
             for s in tooltip.iter() {
-                ctx.print_color(left_x, y, RGB::named(WHITE), RGB::named(GREY), s);
+                ctx.print_color(left_x, y, RGB::named(WHITE), RGB::named(TOOLTIP_BG), s);
                 let padding = (width - s.len() as i32) - 1;
                 for i in 0..padding {
                     ctx.print_color(
                         arrow_pos.x - i,
                         y,
                         RGB::named(WHITE),
-                        RGB::named(GREY),
+                        RGB::from_f32(0.2, 0.2, 0.2),
                         &" ".to_string(),
                     );
                 }
@@ -107,7 +122,7 @@ fn draw_tooltip(ecs: &World, ctx: &mut BTerm) {
                 arrow_pos.x,
                 arrow_pos.y,
                 RGB::named(WHITE),
-                RGB::named(GRAY),
+                RGB::named(TOOLTIP_BG),
                 &"->".to_string(),
             );
         } else {
@@ -115,14 +130,14 @@ fn draw_tooltip(ecs: &World, ctx: &mut BTerm) {
             let left_x = mouse_pos.0 + 3;
             let mut y = mouse_pos.1;
             for s in tooltip.iter() {
-                ctx.print_color(left_x + 1, y, RGB::named(WHITE), RGB::named(GREY), s);
+                ctx.print_color(left_x + 1, y, RGB::named(WHITE), RGB::named(TOOLTIP_BG), s);
                 let padding = (width - s.len() as i32) - 1;
                 for i in 0..padding {
                     ctx.print_color(
                         arrow_pos.x + 1 + i,
                         y,
                         RGB::named(WHITE),
-                        RGB::named(GREY),
+                        RGB::named(TOOLTIP_BG),
                         &" ".to_string(),
                     );
                 }
@@ -132,7 +147,7 @@ fn draw_tooltip(ecs: &World, ctx: &mut BTerm) {
                 arrow_pos.x,
                 arrow_pos.y,
                 RGB::named(WHITE),
-                RGB::named(GREY),
+                RGB::named(TOOLTIP_BG),
                 &"<-".to_string(),
             );
         }
@@ -362,8 +377,13 @@ pub fn main_menu(gs: &mut State, ctx: &mut BTerm) -> MainMenuResult {
 
     ctx.print_color_centered(20, RGB::named(YELLOW), RGB::named(BLACK), "Rusty Dungeon");
     ctx.print_color_centered(21, RGB::named(CYAN), RGB::named(BLACK), "by Sebastian");
-    ctx.print_color_centered(22, RGB::named(GRAY), RGB::named(BLACK), "Use Up/Down Arrows and Enter");
-    
+    ctx.print_color_centered(
+        22,
+        RGB::named(GRAY),
+        RGB::named(BLACK),
+        "Use Up/Down Arrows and Enter",
+    );
+
     let mut y = 24;
     if let RunState::MainMenu {
         menu_selection: selection,

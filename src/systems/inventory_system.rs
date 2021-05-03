@@ -63,6 +63,8 @@ impl<'a> System<'a> for ItemUseSystem {
         ReadStorage<'a, Position>,
         ReadStorage<'a, MagicMapper>,
         WriteExpect<'a, RunState>,
+        ReadStorage<'a, ProvidesFood>,
+        WriteStorage<'a, HungerClock>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
@@ -87,6 +89,8 @@ impl<'a> System<'a> for ItemUseSystem {
             positions,
             magic_mapper,
             mut runstate,
+            provides_food,
+            mut hunger_clocks,
         ) = data;
 
         for (entity, useitem) in (&entities, &wants_use).join() {
@@ -204,6 +208,22 @@ impl<'a> System<'a> for ItemUseSystem {
                             }
                         }
                     }
+                }
+            }
+
+            // Edible
+            let item_edible = provides_food.get(useitem.item);
+            if let Some(_) = item_edible {
+                used_item = true;
+                let target = targets[0];
+                let hc = hunger_clocks.get_mut(target);
+                if let Some(hc) = hc {
+                    hc.state = HungerState::WellFed;
+                    hc.duration = 20;
+                    gamelog.entries.push(format!(
+                        "You eat the {}.",
+                        names.get(useitem.item).unwrap().name
+                    ));
                 }
             }
 

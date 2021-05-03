@@ -79,7 +79,9 @@ pub fn save_game(ecs: &mut World) {
             Equipped,
             WantsToRemoveItem,
             ParticleLifetime,
-            MagicMapper
+            MagicMapper,
+            HungerClock,
+            ProvidesFood
         );
     }
 
@@ -140,7 +142,9 @@ pub fn load_game(ecs: &mut World) {
             Equipped,
             WantsToRemoveItem,
             ParticleLifetime,
-            MagicMapper
+            MagicMapper,
+            HungerClock,
+            ProvidesFood
         );
     }
 

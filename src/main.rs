@@ -12,8 +12,8 @@ mod player;
 pub use player::*;
 mod systems;
 pub use systems::{
-    damage_system::*, inventory_system::*, map_indexing_system::*, melee_combat_system::*,
-    monster_ai_system::*, particle_system::*, visibility_system::*,
+    damage_system::*, hunger_system::*, inventory_system::*, map_indexing_system::*,
+    melee_combat_system::*, monster_ai_system::*, particle_system::*, visibility_system::*,
 };
 mod gamelog;
 mod gui;
@@ -58,6 +58,8 @@ fn main() -> BError {
     game_state.ecs.register::<WantsToRemoveItem>();
     game_state.ecs.register::<ParticleLifetime>();
     game_state.ecs.register::<MagicMapper>();
+    game_state.ecs.register::<HungerClock>();
+    game_state.ecs.register::<ProvidesFood>();
 
     game_state
         .ecs
@@ -337,6 +339,8 @@ impl State {
         drop_items.run_now(&self.ecs);
         let mut item_remove = ItemRemoveSystem {};
         item_remove.run_now(&self.ecs);
+        let mut hunger = HungerSystem {};
+        hunger.run_now(&self.ecs);
         let mut particles = ParticleSpawnSystem {};
         particles.run_now(&self.ecs);
 

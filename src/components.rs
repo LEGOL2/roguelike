@@ -20,7 +20,7 @@ pub struct Renderable {
 }
 
 #[derive(Component, Serialize, Deserialize, Clone)]
-pub struct Player {}
+pub struct Player;
 
 #[derive(Component, ConvertSaveload, Clone)]
 pub struct Viewshed {
@@ -30,7 +30,7 @@ pub struct Viewshed {
 }
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
-pub struct Monster {}
+pub struct Monster;
 
 #[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct Name {
@@ -38,7 +38,7 @@ pub struct Name {
 }
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
-pub struct BlocksTile {}
+pub struct BlocksTile;
 
 #[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct CombatStats {
@@ -72,7 +72,7 @@ impl SufferDamage {
 }
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
-pub struct Item {}
+pub struct Item;
 
 #[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct ProvidesHealing {
@@ -102,7 +102,7 @@ pub struct WantsToDropItem {
 }
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
-pub struct Consumable {}
+pub struct Consumable;
 
 #[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct Ranged {
@@ -168,5 +168,22 @@ pub struct ParticleLifetime {
     pub lifetime_ms: f32,
 }
 
+#[derive(Serialize, Deserialize, Copy, Clone, PartialEq)]
+pub enum HungerState {
+    WellFed,
+    Normal,
+    Hungry,
+    Starving,
+}
+
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct HungerClock {
+    pub state: HungerState,
+    pub duration: i32,
+}
+
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
-pub struct MagicMapper {}
+pub struct ProvidesFood;
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct MagicMapper;
