@@ -1,6 +1,9 @@
-use super::{gamelog::GameLog, SingleActivation, EntityMoved, EntryTrigger, Hidden, Map, Name, SufferDamage, Position, InflictsDamage, ParticleBuilder};
-use specs::prelude::*;
+use super::{
+    gamelog::GameLog, EntityMoved, EntryTrigger, Hidden, InflictsDamage, Map, Name,
+    ParticleBuilder, Position, SingleActivation, SufferDamage,
+};
 use bracket_lib::prelude::*;
+use specs::prelude::*;
 
 pub struct TriggerSystem;
 
@@ -17,12 +20,24 @@ impl<'a> System<'a> for TriggerSystem {
         ReadStorage<'a, InflictsDamage>,
         WriteExpect<'a, ParticleBuilder>,
         WriteStorage<'a, SufferDamage>,
-        ReadStorage<'a, SingleActivation>
+        ReadStorage<'a, SingleActivation>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (map, mut entity_moved, position, entry_trigger, mut hidden, names, entities, mut log, inflicts_damage, mut particle_builder, mut inflict_damage, single_activation) =
-            data;
+        let (
+            map,
+            mut entity_moved,
+            position,
+            entry_trigger,
+            mut hidden,
+            names,
+            entities,
+            mut log,
+            inflicts_damage,
+            mut particle_builder,
+            mut inflict_damage,
+            single_activation,
+        ) = data;
 
         let mut remove_entities: Vec<Entity> = Vec::new();
         for (entity, mut _entity_moved, pos) in (&entities, &mut entity_moved, &position).join() {
@@ -40,7 +55,14 @@ impl<'a> System<'a> for TriggerSystem {
 
                         let damage = inflicts_damage.get(*entity_id);
                         if let Some(damage) = damage {
-                            particle_builder.request(pos.x, pos.y, RGB::named(ORANGE), RGB::named(BLACK), to_cp437('‼'), 200.0);
+                            particle_builder.request(
+                                pos.x,
+                                pos.y,
+                                RGB::named(ORANGE),
+                                RGB::named(BLACK),
+                                to_cp437('‼'),
+                                200.0,
+                            );
                             SufferDamage::new_damage(&mut inflict_damage, entity, damage.damage);
                         }
 

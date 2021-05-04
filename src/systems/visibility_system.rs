@@ -1,6 +1,6 @@
 use specs::prelude::*;
 
-use super::{Map, Player, Position, Viewshed, Hidden, Name, GameLog};
+use super::{GameLog, Hidden, Map, Name, Player, Position, Viewshed};
 use bracket_lib::prelude::{field_of_view, Point, RandomNumberGenerator};
 
 pub struct VisibilitySystem {}
@@ -19,7 +19,8 @@ impl<'a> System<'a> for VisibilitySystem {
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (mut map, entities, mut viewshed, pos, player, mut hidden, mut rng, mut log, names) = data;
+        let (mut map, entities, mut viewshed, pos, player, mut hidden, mut rng, mut log, names) =
+            data;
         for (ent, viewshed, pos) in (&entities, &mut viewshed, &pos).join() {
             if viewshed.dirty {
                 viewshed.dirty = false;
@@ -45,7 +46,8 @@ impl<'a> System<'a> for VisibilitySystem {
                                 if rng.roll_dice(1, 30) == 1 {
                                     let name = names.get(*e);
                                     if let Some(name) = name {
-                                        log.entries.push(format!("You've spotted a {}.", &name.name));
+                                        log.entries
+                                            .push(format!("You've spotted a {}.", &name.name));
                                     }
                                     hidden.remove(*e);
                                 }
