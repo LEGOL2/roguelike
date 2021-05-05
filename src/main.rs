@@ -24,12 +24,22 @@ mod rex_assets;
 mod saveload_system;
 mod spawner;
 
+const SHOW_MAPGEN_VISUALIZER: bool = true;
+
 fn main() -> BError {
     let context = BTermBuilder::simple80x50()
         .with_title("Roguelike")
         .build()?;
 
-    let mut game_state = State { ecs: World::new() };
+    let mut game_state = State {
+        ecs: World::new(),
+        mapgen_next_state: Some(RunState::MainMenu {
+            menu_selection: gui::MainMenuSelection::NewGame,
+        }),
+        mapgen_history: Vec::new(),
+        mapgen_index: 0,
+        mapgen_timer: 0.0,
+    };
     game_state.ecs.register::<Position>();
     game_state.ecs.register::<Renderable>();
     game_state.ecs.register::<Player>();
@@ -77,9 +87,10 @@ fn main() -> BError {
 
     let player_entity = spawner::player(&mut game_state.ecs, 0, 0);
     game_state.ecs.insert(player_entity);
-    game_state.ecs.insert(RunState::MainMenu {
-        menu_selection: gui::MainMenuSelection::NewGame,
-    });
+    // game_state.ecs.insert(RunState::MainMenu {
+    //     menu_selection: gui::MainMenuSelection::NewGame,
+    // });
+    game_state.ecs.insert(RunState::MapGeneration);
     game_state.ecs.insert(gamelog::GameLog {
         entries: vec!["Welcome to the Dungeon".to_string()],
     });
@@ -93,6 +104,10 @@ fn main() -> BError {
 
 pub struct State {
     pub ecs: World,
+    mapgen_next_state: Option<RunState>,
+    mapgen_history: Vec<Map>,
+    mapgen_index: usize,
+    mapgen_timer: f32,
 }
 
 impl GameState for State {
@@ -127,7 +142,7 @@ impl GameState for State {
                 }
             }
             _ => {
-                draw_map(&self.ecs, ctx);
+                draw_map(&self.ecs.fetch::<Map>(), ctx);
                 {
                     let positions = self.ecs.read_storage::<Position>();
                     let renderables = self.ecs.read_storage::<Renderable>();
@@ -310,6 +325,22 @@ impl GameState for State {
                     new_run_state = RunState::MagicMapReveal { row: row + 1 };
                 }
             }
+            RunState::MapGeneration => {
+                if !SHOW_MAPGEN_VISUALIZER {
+                    new_run_state = self.mapgen_next_state.unwrap();
+                }
+                ctx.cls();
+                draw_map(&self.mapgen_history[self.mapgen_index], ctx);
+
+                self.mapgen_timer += ctx.frame_time_ms;
+                if self.mapgen_timer > 300.0 {
+                    self.mapgen_timer = 0.0;
+                    self.mapgen_index += 1;
+                    if self.mapgen_index >= self.mapgen_history.len() {
+                        new_run_state = self.mapgen_next_state.unwrap();
+                    }
+                }
+            }
         }
 
         {
@@ -438,8 +469,12 @@ impl State {
     }
 
     fn generate_world_map(&mut self, new_depth: i32) {
+        self.mapgen_index = 0;
+        self.mapgen_timer = 0.0;
+        self.mapgen_history.clear();
         let mut builder = map_builders::random_builder(new_depth);
         builder.build_map();
+        self.mapgen_history = builder.get_snapshot_history();
         let player_start;
         {
             let mut worldmap_resource = self.ecs.write_resource::<Map>();
@@ -489,4 +524,5 @@ pub enum RunState {
     MagicMapReveal {
         row: i32,
     },
+    MapGeneration,
 }
